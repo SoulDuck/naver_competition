@@ -7,7 +7,7 @@ import os
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from utils import plot_scatter
+from utils import plot_scatter , get_spec_sens , plotROC
 
 # Data Provider
 dataprovider = DataProvider('./wbc_10fold.txt')
@@ -31,7 +31,7 @@ for i in range(1,11):
         layer = affine('fc{}'.format(ind), layer, out_ch)
     top_layer = tf.identity(layer , 'top_layer')
     logits_ = logits('logits', layer, n_classes)
-    pred, pred_cls, cost_op, train_op, correct_pred, accuracy_op = \
+    pred_op , pred_cls, cost_op, train_op, correct_pred, accuracy_op = \
         algorithm(logits_, y_, learning_rate=lr_, optimizer='sgd', use_l2_loss=None)
 
     saver = tf.train.Saver()
@@ -65,25 +65,39 @@ for i in range(1,11):
         if step % 100 ==0:
             # Validation
             feed_dict={x_ : val_data  , y_: val_lab }
-            val_acc , val_cost = sess.run([accuracy_op ,cost_op ] , feed_dict)
+            val_acc , val_cost , val_preds  = sess.run([accuracy_op ,cost_op , pred_op ] , feed_dict)
             # Write validation log
+            val_sens , val_spec = get_spec_sens(val_preds[:,0] , np.argmax(val_lab , axis =1) ,  0.5)
+
+
             prefix = "Validation"
             summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),
-                                        tf.Summary.Value(tag='accuracy_{}'.format(prefix),
-                                                         simple_value=float(val_acc))])
+                                        tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(val_acc)),
+                                        tf.Summary.Value(tag='sensitivity_{}'.format(val_sens), simple_value=float(val_sens)),
+                                        tf.Summary.Value(tag='specifity_{}'.format(val_spec), simple_value=float(val_spec))])
+
+
+
             log_writer.add_summary(summary, step)
             # Model Save
             save_path=os.path.join(save_dir , 'model')
             if val_acc > max_acc:
                 max_acc = val_acc
+
                 print 'Max ACC : {}'.format(max_acc)
                 saver.save(sess , save_path ,step )
                 prefix = 'Validation'
+
+
                 # Test
                 feed_dict = {x_: test_data, y_: test_lab}
-                test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
+                test_acc, test_cost , test_preds = sess.run([accuracy_op, cost_op , pred_op], feed_dict)
+                test_sens, test_spec = get_spec_sens(test_preds[:, 0], np.argmax(test_lab, axis=1), 0.5)
                 print 'Test ACC : ', test_acc
                 print 'Test LOSS :', test_cost
+                print 'Test Sensitiivty : ', test_sens
+                print 'Test Specifity :', test_spec
+
                 writer.writerow([i, train_acc, train_cost, val_acc, val_cost, test_acc, test_cost])
                 test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
                 print 'PCA'
@@ -98,6 +112,9 @@ for i in range(1,11):
                 tsne_savepath = os.path.join('./logs' , str(i) , '{}.png'.format(step))
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
 
+
+
+                exit()
 
         # Training
         # Get random Batch

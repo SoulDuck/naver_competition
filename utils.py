@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 def next_batch(x_data , y_data , batch_size):
     indices=random.sample(range(len(x_data))  , batch_size)
     return x_data[indices] , y_data[indices]
@@ -67,6 +68,85 @@ def plot_scatter (values, cls , n_classes , savepath):
         plt.savefig(savepath)
     plt.show()
 
+
+def get_confmat( pred_cls , cls):
+    cm = confusion_matrix(cls,pred_cls)
+    return cm
+
+
+def get_spec_sens( pred_cls , labels , cutoff):
+    pred_cls=np.asarray(pred_cls)
+
+    indices = pred_cls > cutoff
+    rev_indices = pred_cls < cutoff
+
+    pred_cls[indices]=1
+    pred_cls[rev_indices] = 0
+
+    cm=get_confmat(pred_cls , labels )
+    sensitivity = cm[0, 0] / float(cm[0, 0] + cm[0, 1])
+    specificity = cm[1, 1] / float(cm[1, 0] + cm[1, 1])
+    print'Sensitivity : {}'.format(sensitivity)
+    print'Specificity : {}'.format(specificity)
+    return sensitivity , specificity
+
+
+def plotROC(predStrength, labels , prefix , savepath):
+    debug_flag = False
+    assert np.ndim(predStrength) == np.ndim(labels)
+    if np.ndim(predStrength) == 2:
+        predStrength = np.argmax(predStrength, axis=1)
+        labels = np.argmax(labels, axis=1)
+
+    # how to input?
+
+    cursor = (1.0, 1.0)  # initial cursor
+    ySum = 0.0  # for AUC curve
+    n_pos = np.sum(np.array(labels) == 1)
+    n_neg = len(labels) - n_pos
+    print n_pos
+    print n_neg
+    y_step = 1 / float(n_pos)
+    x_step = 1 / float(n_neg)
+    n_est_pos = 0
+    sortedIndices = np.argsort(predStrength, axis=0)
+    fig = plt.figure(figsize=(10,10))
+    fig.clf()
+    ax = plt.subplot(1, 1, 1)
+    if __debug__ == debug_flag:
+        print 'labels', labels[:10]
+        print 'predStrength', predStrength.T[:10]
+        print 'sortedIndices', sortedIndices.T[:10]
+        print  sortedIndices.tolist()[:10]
+    for ind in sortedIndices.tolist():
+        print ind
+        if labels[ind] == 1.0:
+            DelX = 0;
+            DelY = y_step
+        else:
+            DelX = x_step;
+            DelY = 0
+            ySum += cursor[1]
+        ax.plot([cursor[0], cursor[0] - DelX], [cursor[1], cursor[1] - DelY])
+        cursor = (cursor[0] - DelX, cursor[1] - DelY)
+        if __debug__ == debug_flag:
+            print 'label', labels[ind]
+            print 'delX',
+            print 'sortedIndices', sortedIndices.T
+            print 'DelX:', DelX, 'DelY:', DelY
+            print 'cursor[0]-DelX :', cursor[0], 'cursor[1]-DelY :', cursor[1]
+    ax.plot([0, 1], [0, 1], 'b--')
+    plt.xlabel('False Positive Rate');
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC curve for {}'.format(prefix))
+
+    ax.axis([0, 1, 0, 1])
+    if __debug__ == debug_flag:
+        print '# of True :', n_pos
+        print '# of False :', n_neg
+    plt.savefig(savepath)
+    # plt.show()
+    print 'The Area Under Curve is :', ySum * x_step
 
 if __name__ == '__main__':
     plot_scatter(np.asarray([[1.0,1.0] , [1.0,2.0] ,[1.0,3.0]])   , np.asarray([0,1,1]) ,2  ,None )
