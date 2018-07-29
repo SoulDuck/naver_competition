@@ -139,23 +139,9 @@ for i in range(1,11):
         feed_dict = {x_: batch_xs, y_: batch_ys, lr_: 0.01}
         _, train_cost, train_acc , train_preds = sess.run([train_op, cost_op, accuracy_op, pred_op], feed_dict)
 
-        train_sens, train_spec = get_spec_sens(train_preds[:, 1], np.argmax(train_lab, axis=1), 0.5)
-        train_cohen = cohen_kappa_score(y1=np.argmax(train_preds, axis=1), y2=np.argmax(train_lab, axis=1))
-        train_b_acc = balanced_accuracy(train_preds[:, 1], np.argmax(train_lab, axis=1))
-        train_auc = plotROC(predStrength=train_preds[:, 1], labels=np.argmax(train_lab, axis=1),
-                          prefix='Train ROC Curve',
-                          savepath='./logs/{}/train_plot_{}.png'.format(i, step))
-
         prefix = 'Train'
         summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(train_cost)),
                                     tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(train_acc)),
-                                    tf.Summary.Value(tag='sensitivity_{}'.format(prefix), simple_value=float(train_sens)),
-                                    tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(train_spec)),
-                                    tf.Summary.Value(tag='cohen_{}'.format(prefix), simple_value=float(train_cohen)),
-                                    tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),
-                                                     simple_value=float(train_b_acc)),
-                                    tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),
-                                                     simple_value=float(train_auc)),
                                     ])
         log_writer.add_summary(summary, step)
     print 'RESET GRAPH'
