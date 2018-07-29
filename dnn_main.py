@@ -115,9 +115,6 @@ for i in range(1,11):
                 print 'Test balanced accuracy :' ,test_b_acc
                 print 'Test AUC :', test_auc
 
-
-
-
                 test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
                 print 'PCA'
                 feed_dict = {x_: np.vstack([train_data, val_data]) , y_: np.vstack([train_lab, val_lab])}
