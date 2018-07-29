@@ -91,12 +91,11 @@ for i in range(1,11):
                 top_layer_values = np.squeeze(sess.run([top_layer ] , feed_dict))
                 pca = PCA(n_components=2)
                 reduced_top_layer_values = pca.fit_transform(top_layer_values)
-
                 print 'TSNE'
                 cls=np.argmax(np.vstack([train_lab, val_lab]) ,axis =1 )
                 tsne = TSNE(n_components=2)
                 transfer_values_reduced = tsne.fit_transform(reduced_top_layer_values )
-                tsne_savepath = os.path.join('./logs' , '{}_{}.png'.format(i,step) )
+                tsne_savepath = os.path.join('./logs' , str(i) , '{}.png'.format(step))
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
 
 
