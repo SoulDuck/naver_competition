@@ -129,7 +129,7 @@ for i in range(1,11):
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
 
 
-                writer.writerow([i, train_acc, train_cost, train_sens , train_spec , train_cohen , train_b_acc , train_auc ,
+                writer.writerow([i, train_acc, train_cost,
                                  val_acc, val_cost, val_sens , val_spec , val_cohen , val_b_acc , val_auc,
                                  test_acc ,test_cost , test_sens , test_spec , test_cohen , test_b_acc , test_auc])
 
