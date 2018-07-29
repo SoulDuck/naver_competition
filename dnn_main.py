@@ -7,7 +7,9 @@ import os
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from utils import plot_scatter , get_spec_sens , plotROC
+from sklearn.metrics import cohen_kappa_score
+from utils import plot_scatter , get_spec_sens , plotROC , balanced_accuracy
+
 
 # Data Provider
 dataprovider = DataProvider('./wbc_10fold.txt')
@@ -68,15 +70,21 @@ for i in range(1,11):
             val_acc , val_cost , val_preds  = sess.run([accuracy_op ,cost_op , pred_op ] , feed_dict)
             # Write validation log
             val_sens , val_spec = get_spec_sens(val_preds[:,0] , np.argmax(val_lab , axis =1) ,  0.5)
+            val_cohen = cohen_kappa_score(y1=np.argmax(val_preds, axis=1), y2=np.argmax(val_lab, axis=1))
+            val_b_acc = balanced_accuracy(val_preds[:, 0], np.argmax(val_lab, axis=1))
+            val_auc = plotROC(predStrength=val_preds[:, 0], labels=np.argmax(val_lab, axis=1), prefix='Validation ROC Curve',
+                    savepath='./logs/{}/validation_plot_{}.png'.format(i, step))
 
 
             prefix = "Validation"
             summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),
                                         tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(val_acc)),
-                                        tf.Summary.Value(tag='sensitivity_{}'.format(val_sens), simple_value=float(val_sens)),
-                                        tf.Summary.Value(tag='specifity_{}'.format(val_spec), simple_value=float(val_spec))])
-
-
+                                        tf.Summary.Value(tag='sensitivity_{}'.format(prefix), simple_value=float(val_sens)),
+                                        tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(val_spec)),
+                                        tf.Summary.Value(tag='cohen_{}'.format(prefix),simple_value=float(val_cohen)),
+                                        tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_b_acc)),
+                                        tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_auc)),
+                                        ])
 
             log_writer.add_summary(summary, step)
             # Model Save
@@ -93,10 +101,20 @@ for i in range(1,11):
                 feed_dict = {x_: test_data, y_: test_lab}
                 test_acc, test_cost , test_preds = sess.run([accuracy_op, cost_op , pred_op], feed_dict)
                 test_sens, test_spec = get_spec_sens(test_preds[:, 0], np.argmax(test_lab, axis=1), 0.5)
+                test_cohen = cohen_kappa_score(y1=np.argmax(test_preds, axis=1), y2=np.argmax(test_lab, axis=1))
+                test_b_acc = balanced_accuracy(test_preds[:, 0] ,np.argmax(test_lab, axis=1) )
+                test_auc = plotROC(predStrength=test_preds[:, 0], labels=np.argmax(test_lab, axis=1), prefix='Test ROC Curve',
+                        savepath='./logs/{}/test_plot_{}.png'.format(i,step))
+
                 print 'Test ACC : ', test_acc
                 print 'Test LOSS :', test_cost
                 print 'Test Sensitiivty : ', test_sens
                 print 'Test Specifity :', test_spec
+                print 'Test cohen :', test_cohen
+                print 'Test balanced accuracy :' ,test_b_acc
+                print 'Test AUC :', test_auc
+
+
 
                 writer.writerow([i, train_acc, train_cost, val_acc, val_cost, test_acc, test_cost])
                 test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
@@ -111,10 +129,9 @@ for i in range(1,11):
                 transfer_values_reduced = tsne.fit_transform(reduced_top_layer_values )
                 tsne_savepath = os.path.join('./logs' , str(i) , '{}.png'.format(step))
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
-
-
-
                 exit()
+
+
 
         # Training
         # Get random Batch

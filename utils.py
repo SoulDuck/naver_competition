@@ -1,7 +1,8 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix , cohen_kappa_score
+
 def next_batch(x_data , y_data , batch_size):
     indices=random.sample(range(len(x_data))  , batch_size)
     return x_data[indices] , y_data[indices]
@@ -90,6 +91,16 @@ def get_spec_sens( pred_cls , labels , cutoff):
     print'Specificity : {}'.format(specificity)
     return sensitivity , specificity
 
+def balanced_accuracy(pred_cls , labels):
+    cm = get_confmat(pred_cls, labels)
+    sensitivity = cm[0, 0] / float(cm[0, 0] + cm[0, 1])
+    specificity = cm[1, 1] / float(cm[1, 0] + cm[1, 1])
+
+    b_acc  =(sensitivity + specificity )/ 2
+    return b_acc
+
+
+
 
 def plotROC(predStrength, labels , prefix , savepath):
     debug_flag = False
@@ -147,6 +158,14 @@ def plotROC(predStrength, labels , prefix , savepath):
     plt.savefig(savepath)
     # plt.show()
     print 'The Area Under Curve is :', ySum * x_step
+    return ySum * x_step
+
+
+
 
 if __name__ == '__main__':
     plot_scatter(np.asarray([[1.0,1.0] , [1.0,2.0] ,[1.0,3.0]])   , np.asarray([0,1,1]) ,2  ,None )
+    # Kohen Kappa Score
+    preds = [0 ,1 , 1]
+    trues = [0,0,1]
+    print cohen_kappa_score(preds , trues )
