@@ -18,7 +18,7 @@ result = open('./result.csv','w')
 writer=csv.writer(result)
 save_root_dir = './save_model'
 
-for i in range(1,11):
+for i in range(2,11):
     max_acc = 0
     train_acc = 0
     train_cost = 10000
