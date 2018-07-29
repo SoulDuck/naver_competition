@@ -69,8 +69,9 @@ for i in range(1,11):
             # Validation
             feed_dict={x_ : val_data  , y_: val_lab }
             val_acc , val_cost , val_preds  = sess.run([accuracy_op ,cost_op , pred_op ] , feed_dict)
+
             # Write validation log
-            val_sens , val_spec = get_spec_sens(val_preds[:,1] , np.argmax(val_lab , axis =1) ,  0.5)
+            #val_sens , val_spec = get_spec_sens(val_preds[:,1] , np.argmax(val_lab , axis =1) ,  0.5)
             val_cohen = cohen_kappa_score(y1=np.argmax(val_preds, axis=1), y2=np.argmax(val_lab, axis=1))
             val_b_acc = balanced_accuracy(val_preds[:, 1], np.argmax(val_lab, axis=1))
             val_auc = plotROC(predStrength=val_preds[:, 1], labels=np.argmax(val_lab, axis=1), prefix='Validation ROC Curve',
@@ -81,7 +82,7 @@ for i in range(1,11):
             summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),
                                         tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(val_acc)),
                                         tf.Summary.Value(tag='sensitivity_{}'.format(prefix), simple_value=float(val_sens)),
-                                        tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(val_spec)),
+                                        #tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(val_spec)),
                                         tf.Summary.Value(tag='cohen_{}'.format(prefix),simple_value=float(val_cohen)),
                                         tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_b_acc)),
                                         tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_auc)),
