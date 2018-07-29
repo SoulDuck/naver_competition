@@ -87,7 +87,7 @@ for i in range(1,11):
         # Training
         # Get random Batch
         batch_xs , batch_ys = next_batch(train_data, train_lab, 30)
-        feed_dict = {x_: batch_xs, y_: batch_ys, lr_: 0.0001}
+        feed_dict = {x_: batch_xs, y_: batch_ys, lr_: 0.01}
         _, train_cost, train_acc = sess.run([train_op, cost_op, accuracy_op], feed_dict)
         prefix = 'Train'
         summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),

@@ -6,6 +6,16 @@ dataprovider = DataProvider('./wbc_10fold.txt')
 datum , labels =dataprovider.get_all_train('\t')
 
 
+class EDA(object):
+    def __init__(self):
+
+        plt.scatter(x ,y )
+
+
+
+
+
+
 mal_indices=np.where([labels ==1])[1]
 # Benign
 bgn_indices=np.where([labels ==0])[1]
