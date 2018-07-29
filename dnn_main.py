@@ -132,6 +132,7 @@ for i in range(1,11):
                 writer.writerow([i, train_acc, train_cost,
                                  val_acc, val_cost, val_sens , val_spec , val_cohen , val_b_acc , val_auc,
                                  test_acc ,test_cost , test_sens , test_spec , test_cohen , test_b_acc , test_auc])
+                result.flush()
 
         # Training
         # Get random Batch
