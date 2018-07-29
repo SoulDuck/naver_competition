@@ -130,7 +130,6 @@ def plotROC(predStrength, labels , prefix , savepath):
         print 'sortedIndices', sortedIndices.T[:10]
         print  sortedIndices.tolist()[:10]
     for ind in sortedIndices.tolist():
-        print ind
         if labels[ind] == 1.0:
             DelX = 0;
             DelY = y_step
