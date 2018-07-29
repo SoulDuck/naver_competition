@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 def next_batch(x_data , y_data , batch_size):
     indices=random.sample(range(len(x_data))  , batch_size)
     return x_data[indices] , y_data[indices]
@@ -46,3 +47,26 @@ def normalize(train_data , val_data ,test_data):
         ret_test_mat[:, i] = normal_test
 
     return ret_train_mat , ret_val_mat, ret_test_mat
+
+
+def plot_scatter (values, cls , n_classes , savepath):
+    # Create a color-map with a different color for each class.
+    import matplotlib.cm as cm
+    cmap = cm.rainbow(np.linspace(0.0, 1.0, n_classes))
+
+    # Get the color for each sample.
+    colors = cmap[cls]
+
+    # Extract the x- and y-values.
+    x = values[:, 0]
+    y = values[:, 1]
+
+    # Plot it.
+    plt.scatter(x, y, color=colors)
+    if not savepath == None:
+        plt.savefig(savepath)
+    plt.show()
+
+
+if __name__ == '__main__':
+    plot_scatter(np.asarray([[1.0,1.0] , [1.0,2.0] ,[1.0,3.0]])   , np.asarray([0,1,1]) ,2  ,None )

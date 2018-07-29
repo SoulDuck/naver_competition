@@ -5,6 +5,9 @@ from utils import next_batch , normalize ,cls2onehot
 import csv
 import os
 import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from utils import plot_scatter
 
 # Data Provider
 dataprovider = DataProvider('./wbc_10fold.txt')
@@ -12,7 +15,6 @@ print ' ##### 10 Fold Training Start ######'
 result = open('./result.csv','w')
 writer=csv.writer(result)
 save_root_dir = './save_model'
-
 
 for i in range(1,11):
     max_acc = 0
@@ -27,6 +29,7 @@ for i in range(1,11):
     layer = x_
     for ind, out_ch in enumerate(out_chs):
         layer = affine('fc{}'.format(ind), layer, out_ch)
+    top_layer = tf.identity(layer , 'top_layer')
     logits_ = logits('logits', layer, n_classes)
     pred, pred_cls, cost_op, train_op, correct_pred, accuracy_op = \
         algorithm(logits_, y_, learning_rate=lr_, optimizer='sgd', use_l2_loss=None)
@@ -82,6 +85,19 @@ for i in range(1,11):
                 print 'Test ACC : ', test_acc
                 print 'Test LOSS :', test_cost
                 writer.writerow([i, train_acc, train_cost, val_acc, val_cost, test_acc, test_cost])
+                test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
+                print 'PCA'
+                feed_dict = {x_: np.vstack([train_data, val_data]) , y_: np.vstack([train_lab, val_lab])}
+                top_layer_values = np.squeeze(sess.run([top_layer ] , feed_dict))
+                pca = PCA(n_components=2)
+                reduced_top_layer_values = pca.fit_transform(top_layer_values)
+
+                print 'TSNE'
+                cls=np.argmax(np.vstack([train_lab, val_lab]) ,axis =1 )
+                tsne = TSNE(n_components=2)
+                transfer_values_reduced = tsne.fit_transform(reduced_top_layer_values )
+                tsne_savepath = os.path.join('./logs' , '{}_{}.png'.format(i,step) )
+                plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
 
 
         # Training
@@ -94,6 +110,7 @@ for i in range(1,11):
                                     tf.Summary.Value(tag='accuracy_{}'.format(prefix),
                                                      simple_value=float(val_acc))])
         log_writer.add_summary(summary, step)
+
     print 'RESET GRAPH'
     tf.reset_default_graph()
 result.close()
