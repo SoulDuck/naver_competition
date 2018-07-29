@@ -41,7 +41,7 @@ for i in range(1,11):
     init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
     sess = tf.Session()
     sess.run(init)
-    max_iter = 30000
+    max_iter = 10000
 
     print ' ##### {} ######'.format(i)
     dataprovider.read_wbc_10_fold('\t' , i ) #
