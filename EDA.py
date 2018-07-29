@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 from DataProvider import DataProvider
 dataprovider = DataProvider('./wbc_10fold.txt')
 datum , labels =dataprovider.get_all_train('\t')
