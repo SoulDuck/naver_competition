@@ -22,6 +22,7 @@ for i in range(1,11):
     max_acc = 0
     train_acc = 0
     train_cost = 10000
+    train_sens, train_spec, train_cohen, train_b_acc, train_auc=0,0,0,0,0
     # INIT MODEL
     n_classes = 2
     x_ = tf.placeholder(tf.float32, [None, 9], 'x_')
@@ -116,7 +117,7 @@ for i in range(1,11):
 
 
 
-                writer.writerow([i, train_acc, train_cost, val_acc, val_cost, test_acc, test_cost])
+
                 test_acc, test_cost = sess.run([accuracy_op, cost_op], feed_dict)
                 print 'PCA'
                 feed_dict = {x_: np.vstack([train_data, val_data]) , y_: np.vstack([train_lab, val_lab])}
@@ -130,20 +131,65 @@ for i in range(1,11):
                 tsne_savepath = os.path.join('./logs' , str(i) , '{}.png'.format(step))
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
 
+
+                writer.writerow([i, train_acc, train_cost, train_sens , train_spec , train_cohen , train_b_acc , train_auc ,
+                                 val_acc, val_cost, val_sens , val_spec , val_cohen , val_b_acc , val_auc,
+                                 test_acc ,test_cost , test_sens , test_spec , test_cohen , test_b_acc , test_auc])
+
         # Training
         # Get random Batch
         batch_xs , batch_ys = next_batch(train_data, train_lab, 30)
         feed_dict = {x_: batch_xs, y_: batch_ys, lr_: 0.01}
-        _, train_cost, train_acc = sess.run([train_op, cost_op, accuracy_op], feed_dict)
-        prefix = 'Train'
-        summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),
-                                    tf.Summary.Value(tag='accuracy_{}'.format(prefix),
-                                                     simple_value=float(val_acc))])
-        log_writer.add_summary(summary, step)
+        _, train_cost, train_acc , train_preds = sess.run([train_op, cost_op, accuracy_op, pred_op], feed_dict)
 
+        train_sens, train_spec = get_spec_sens(train_preds[:, 1], np.argmax(train_lab, axis=1), 0.5)
+        train_cohen = cohen_kappa_score(y1=np.argmax(train_preds, axis=1), y2=np.argmax(train_lab, axis=1))
+        train_b_acc = balanced_accuracy(train_preds[:, 1], np.argmax(train_lab, axis=1))
+        train_auc = plotROC(predStrength=train_preds[:, 1], labels=np.argmax(train_lab, axis=1),
+                          prefix='Train ROC Curve',
+                          savepath='./logs/{}/train_plot_{}.png'.format(i, step))
+
+        prefix = 'Train'
+        summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(train_cost)),
+                                    tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(train_acc)),
+                                    tf.Summary.Value(tag='sensitivity_{}'.format(prefix), simple_value=float(train_sens)),
+                                    tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(train_spec)),
+                                    tf.Summary.Value(tag='cohen_{}'.format(prefix), simple_value=float(train_cohen)),
+                                    tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),
+                                                     simple_value=float(train_b_acc)),
+                                    tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),
+                                                     simple_value=float(train_auc)),
+                                    ])
+        log_writer.add_summary(summary, step)
     print 'RESET GRAPH'
     tf.reset_default_graph()
 result.close()
+
+
+"""
+feed_dict={x_ : val_data  , y_: val_lab }
+val_acc , val_cost , val_preds  = sess.run([accuracy_op ,cost_op , pred_op ] , feed_dict)
+# Write validation log
+val_sens , val_spec = get_spec_sens(val_preds[:,1] , np.argmax(val_lab , axis =1) ,  0.5)
+val_cohen = cohen_kappa_score(y1=np.argmax(val_preds, axis=1), y2=np.argmax(val_lab, axis=1))
+val_b_acc = balanced_accuracy(val_preds[:, 1], np.argmax(val_lab, axis=1))
+val_auc = plotROC(predStrength=val_preds[:, 1], labels=np.argmax(val_lab, axis=1), prefix='Validation ROC Curve',
+    savepath='./logs/{}/validation_plot_{}.png'.format(i, step))
+
+
+prefix = "Validation"
+summary = tf.Summary(value=[tf.Summary.Value(tag='loss_{}'.format(prefix), simple_value=float(val_cost)),
+                        tf.Summary.Value(tag='accuracy_{}'.format(prefix), simple_value=float(val_acc)),
+                        tf.Summary.Value(tag='sensitivity_{}'.format(prefix), simple_value=float(val_sens)),
+                        tf.Summary.Value(tag='specifity_{}'.format(prefix), simple_value=float(val_spec)),
+                        tf.Summary.Value(tag='cohen_{}'.format(prefix),simple_value=float(val_cohen)),
+                        tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_b_acc)),
+                        tf.Summary.Value(tag='balance_accuracy_{}'.format(prefix),simple_value=float(val_auc)),
+                        ])
+
+
+
+"""
 
 
 
