@@ -157,6 +157,7 @@ def plotROC(predStrength, labels , prefix , savepath):
     plt.savefig(savepath)
     # plt.show()
     print 'The Area Under Curve is :', ySum * x_step
+    plt.close()
     return ySum * x_step
 
 
