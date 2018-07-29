@@ -129,9 +129,6 @@ for i in range(1,11):
                 transfer_values_reduced = tsne.fit_transform(reduced_top_layer_values )
                 tsne_savepath = os.path.join('./logs' , str(i) , '{}.png'.format(step))
                 plot_scatter(transfer_values_reduced, cls , 2 , savepath= tsne_savepath)
-                exit()
-
-
 
         # Training
         # Get random Batch
